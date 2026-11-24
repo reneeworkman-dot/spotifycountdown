@@ -53,14 +53,6 @@
       border-radius: 8px;
       padding: 10px 12px;
     }
-    .refresh {
-      background: var(--ink);
-      color: #fff;
-      border: 0;
-      border-radius: 8px;
-      padding: 10px 14px;
-    }
-    .refresh[disabled] { opacity: 0.55; cursor: progress; }
     .section { margin: 8px 0 28px; }
     .section h2 {
       display: flex;
@@ -185,7 +177,6 @@
     <div class="toolbar">
       <label class="sr" for="q">Search artist or release</label>
       <input class="search" id="q" type="search" placeholder="Search artist or release" autocomplete="off">
-      <button class="refresh" id="refresh" type="button">Refresh</button>
     </div>
     <p class="sr" id="live" aria-live="polite"></p>
     <div id="banner"></div>
@@ -220,7 +211,6 @@
     const bannerEl = document.getElementById("banner");
     const stampEl = document.getElementById("stamp");
     const liveEl = document.getElementById("live");
-    const refreshBtn = document.getElementById("refresh");
     const qEl = document.getElementById("q");
     let dayTimer = 0;
 
@@ -459,20 +449,18 @@
         + esc(message)
         + '</p><button class="retry" type="button" id="retry">Try again</button></div>';
       const retry = document.getElementById("retry");
-      if (retry) retry.addEventListener("click", () => refresh(true));
+      if (retry) retry.addEventListener("click", () => refresh());
       stampEl.textContent = "The sheet did not load.";
     }
 
     function armDailyReload() {
       clearTimeout(dayTimer);
-      dayTimer = setTimeout(() => refresh(false), DAY_MS);
+      dayTimer = setTimeout(() => refresh(), DAY_MS);
     }
 
-    async function refresh(manual) {
+    async function refresh() {
       if (state.loading) return;
       state.loading = true;
-      refreshBtn.disabled = true;
-      refreshBtn.textContent = "Refreshing";
       try {
         const table = await loadSheet();
         state.rows = parseTable(table);
@@ -488,10 +476,7 @@
         liveEl.textContent = message;
       } finally {
         state.loading = false;
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = "Refresh";
         armDailyReload();
-        if (manual) refreshBtn.focus();
       }
     }
 
@@ -508,14 +493,13 @@
       state.query = qEl.value.trim().toLowerCase();
       if (state.rows.length) render();
     });
-    refreshBtn.addEventListener("click", () => refresh(true));
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && state.loadedAt && Date.now() - state.loadedAt.getTime() >= DAY_MS) {
-        refresh(false);
+        refresh();
       }
     });
 
-    refresh(false);
+    refresh();
   </script>
 </body>
 </html>
